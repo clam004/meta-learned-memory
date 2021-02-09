@@ -9,11 +9,11 @@ There are 3 major improvements described here:
 
 3. Methods to train the model in parallel on multiple GPUs to speed up batch gradient descent, which is still required to learn how to quickly remember concepts
 
- # Elastic Vocab
+ ## Elastic Vocab
 
  Typical seq2seq models have a fixed vocabulary, ie the number of words or tokens that can be used in the input and output are fixed. We have developed a method here for keeping a vocabulary is constantly growing and occasionally pruned. 
 
-# Memory
+## Memory
 
 This repository builds on the [chat-transformer](https://github.com/clam004/chat-transformer) chatbot
 by adding a memory mechinism to the transformer sequence2sequence chatbot based on this [paper by Tsendsuren Munkhdalai et al](https://arxiv.org/pdf/1907.09720.pdf) called 
@@ -23,11 +23,11 @@ by adding a memory mechinism to the transformer sequence2sequence chatbot based 
 
 the high level gist of it is this: the controller in the diagram above is the sequence2sequence chatbot. In addition to taking a sequence as input and outputting a sequence as output, it also sends a signal to the memory network, a `key vector`, this is the input to a neural network telling it to retrieve a memory. That memory recall is returned to the chatbot in the form of the `value vector` which the chatbot can use to inform its next response. 
 
-# Data Parallelism 
+## Data Parallelism 
 
 We explain the lines of code that recruit and parallelize training across multiple GPUs
 
-## How to Start
+# How to Start
 
 if you already have python 3.6 and virtual environments, create a python 3.6 virtual environment, here i used env36 for python3.6 but you can use anything
 
@@ -98,3 +98,7 @@ This can be fixed by providing your python interpreter with the path-to-your-mod
 you can find this path listed here
 
 `$ python3 -m site`
+
+## Order of Progression
+
+Start with the notebook who's name starts with `part_1` and follow the directions inside
