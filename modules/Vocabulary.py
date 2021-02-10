@@ -10,12 +10,25 @@ class Vocab(nn.Module):
                  word2count = None, emb2vocab = None):
         
         '''
-        embed_dim: integer, number of dimensions to represent words/tokens with
-        word2index: a dictionary mapping a word-string to it's unique integer index 
+        This is a class that handles the transformation between 
+        embedding space and vocabulary space. The methods of this class update both 
+        the number of word embeedings and also the size of the matrix that maps
+        the vector output of a neural network module to a vector the length of
+        the output vocabulary or selecting the next token to output.
+        
+        embed_dim (integer): number of dimensions to represent words/tokens with
+        word2index (dict): a dictionary mapping a word-string to it's unique integer index 
                     that represents it in the embedding matrix
-        word2count: a dictionary mapping a word-string to the number of times it's been 
+        embedding (nn.Embedding): module that keeps a matrix where each row is a trainable
+                    word vector with the row index corresponding to the token index
+        word2count (dict): a dictionary mapping a word-string to the number of times it's been 
                     used, either in the input or the outout 
+        emb2vocab (nn.Linear): module that takes an vector of length emb_dim 
+                    (note: there is no reason that this has to be the same length as
+                    the word vectors) and transforms this to a vector of length
+                    vocab_size, aka self.embedding.weight.shape[0] or len(self.word2index)
         '''
+        
         super().__init__()
         
         self.emb_dim = emb_dim
