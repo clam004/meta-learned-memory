@@ -14,7 +14,7 @@ class Vocab(nn.Module):
         embedding space and vocabulary space. The methods of this class update both 
         the number of word embeedings and also the size of the matrix that maps
         the vector output of a neural network module to a vector the length of
-        the output vocabulary or selecting the next token to output.
+        the output vocabulary for selecting the next token to output.
         
         embed_dim (integer): number of dimensions to represent words/tokens with
         word2index (dict): a dictionary mapping a word-string to it's unique integer index 
