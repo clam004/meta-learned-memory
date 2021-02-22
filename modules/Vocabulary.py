@@ -60,7 +60,7 @@ class Vocab(nn.Module):
         # make all text lowercase
         string = string.lower()
         # split sentence string into list of word strings
-        string = string.split(" ")
+        string = string.rstrip().lstrip().split(" ")
         return string
     
     def tokens2tensor(self, list_o_strings):
