@@ -2,6 +2,7 @@ import math, random, copy
 import torch
 from torch import nn
 import torch.nn.functional as F
+from torch.autograd import Variable # Used for positional encoder
 
 class Embedder(nn.Module):
     def __init__(self, vocab_size, emb_dim):
@@ -154,7 +155,7 @@ class FeedForward(nn.Module):
         x = self.linear_2(x)
         return x
 
-class TransformerLayer(nn.Module):
+class DecoderLayer(nn.Module):
 
     def __init__(self, emb_dim, heads, dropout=0.1):
         super().__init__()
@@ -193,6 +194,31 @@ class TransformerLayer(nn.Module):
         de_out = de_out + self.dropout_3(self.ff(de_nrm))
         return de_out
     
+class EncoderLayer(nn.Module):
+    def __init__(self, emb_dim, heads, dropout=0.1):
+        super().__init__()
+        self.norm_1 = Norm(emb_dim)
+        self.dropout_1 = nn.Dropout(dropout)
+        self.attn = MultiHeadAttention(heads, emb_dim, dropout=dropout)
+        self.norm_2 = Norm(emb_dim)
+        self.ff = FeedForward(emb_dim, dropout=dropout)
+        self.dropout_2 = nn.Dropout(dropout)
+        
+    def forward(self, vector_sequence, mask):
+        '''
+        input:
+            vector_sequence of shape (batch size, sequence length, embedding dimensions)
+            source_mask (mask over input sequence) of shape (batch size, 1, sequence length)
+        output: sequence of vectors after embedding, postional encoding, attention and normalization
+            shape (batch size, sequence length, embedding dimensions)
+        '''
+        x2 = self.norm_1(vector_sequence)
+        x2_attn, x2_scores = self.attn(x2,x2,x2,mask)
+        vector_sequence = vector_sequence + self.dropout_1(x2_attn)
+        x2 = self.norm_2(vector_sequence)
+        vector_sequence = vector_sequence + self.dropout_2(self.ff(x2))
+        return vector_sequence
+    
 class Transformer(nn.Module):
     '''
     If your target sequence is `see` `ya` and you want to train on the entire 
@@ -207,12 +233,40 @@ class Transformer(nn.Module):
         
         self.n_layers = n_layers
         self.pe = PositionalEncoder(emb_dim, dropout=dropout)
-        self.layers = get_clones(TransformerLayer(emb_dim, heads, dropout), n_layers)
+        self.encodelayers = get_clones(EncoderLayer(emb_dim, heads, dropout), n_layers)
+        self.decodelayers = get_clones(DecoderLayer(emb_dim, heads, dropout), n_layers)
         self.norm = Norm(emb_dim)
         
     def forward(self, de_vecs, de_mask, en_vecs, en_mask):
+        '''
+        inputs:
+            de_vecs - decoder ouputs so far 
+                      (batch size, output sequence length, embedding dimensions)
+            de_mask (batch size, output sequence length, output sequence length)
+            en_vecs - encoder output 
+                      (batch size, input sequence length, embedding dimensions)
+            en_mask (batch size, 1, input sequence length)
+        outputs:
+            de_vecs - next decoder output (batch size, output sequence length, embedding dimensions)
+        '''
+        
+         
+        en_vecs = self.pe(en_vecs) # Added this newly 
         
         for i in range(self.n_layers):
-            de_vecs = self.layers[i](de_vecs, de_mask, en_vecs, en_mask)
+            en_vecs = self.encodelayers[i](en_vecs, en_mask)
+        
+        de_vecs = self.pe(de_vecs) # Added this newly
+        
+        for i in range(self.n_layers):
+            de_vecs = self.decodelayers[i](de_vecs, de_mask, en_vecs, en_mask)
             
         return self.norm(de_vecs)
+    
+# What we call Transformer here corresponds to a modification of
+# https://github.com/clam004/chat-transformer/blob/main/scripts/Transformer.py
+# Where we have left out the embedding step so that
+# embedding word vectors can be handled by the Elastic Vocabulary Module 
+    
+    
+    
