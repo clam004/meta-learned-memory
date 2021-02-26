@@ -101,4 +101,4 @@ you can find this path listed here
 
 ## Order of Progression
 
-Start with the notebook who's name starts with `part_1` and follow the directions inside
+Start with the Minimal Working Example to get the gist. Then to learn the details, start with notebook who's name starts with `part_1` and follow the directions inside, moving to `part_2` etc.
