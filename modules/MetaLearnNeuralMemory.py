@@ -5,7 +5,7 @@ import torch.optim as optim
 from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.distributions import Categorical
+#from torch.distributions import Categorical
 
 class MNMp(nn.Module):
 
@@ -31,12 +31,25 @@ class MNMp(nn.Module):
         self.v_r = None
         self.h_lstm = None
         self.c_lstm = None
-            
-    def initialize_v_h_c(self, batch_size):
         
+        ''' 
+        self.v_r = torch.zeros((1, self.dim_hidden)).float()
+        self.h_lstm = torch.zeros((1, self.dim_hidden)).float()
+        self.c_lstm = torch.zeros((1, self.dim_hidden)).float()
+        '''
+        
+    def repeat_v_h_c(self, batch_size):
+            
             self.v_r = torch.zeros((batch_size, self.dim_hidden)).float()
             self.h_lstm = torch.zeros((batch_size, self.dim_hidden)).float()
             self.c_lstm = torch.zeros((batch_size, self.dim_hidden)).float()
+            
+            '''
+            if self.v_r.shape[0] != batch_size:
+                self.v_r = self.v_r.repeat(batch_size,1)
+                self.h_lstm = self.h_lstm.repeat(batch_size,1)
+                self.c_lstm = self.c_lstm.repeat(batch_size,1)
+            '''
             
             if next(self.parameters()).is_cuda:
                 self.v_r = self.v_r.cuda()
@@ -47,8 +60,10 @@ class MNMp(nn.Module):
         """ the input must have shape (batch_size, emb_dim) because it will be 
         concatenated with self.v_r of the same shape """
 
-        self.initialize_v_h_c(x.shape[0])
+        self.repeat_v_h_c(x.shape[0])
+        
         x = x.squeeze(1)
+        
         self.h_lstm, self.c_lstm = self.control(torch.cat([x, self.v_r], dim=1), 
                                                 (self.h_lstm, self.c_lstm))
         
@@ -66,8 +81,7 @@ class MNMp(nn.Module):
         self.v_r = self.memfunc.read(k_r)
         h_lstm = self.read_out(torch.cat([self.h_lstm, self.v_r], dim=1))
 
-        return h_lstm.unsqueeze(1), reconst_loss, reconst_loss_init 
-        #return x, torch.Tensor([0]), torch.Tensor([0]) #
+        return h_lstm.unsqueeze(1), reconst_loss, reconst_loss_init  
 
 class FFMemoryLearned(nn.Module):
     
