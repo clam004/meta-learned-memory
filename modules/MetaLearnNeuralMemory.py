@@ -28,60 +28,58 @@ class MNMp(nn.Module):
         self.kv_rate = nn.Linear(dim_hidden, 1)
         self.read_out = nn.Linear(dim_hidden+dim_hidden, dim_hidden)
         
-        self.v_r = None
-        self.h_lstm = None
-        self.c_lstm = None
-        
-        ''' 
-        self.v_r = torch.zeros((1, self.dim_hidden)).float()
-        self.h_lstm = torch.zeros((1, self.dim_hidden)).float()
-        self.c_lstm = torch.zeros((1, self.dim_hidden)).float()
-        '''
+        self.v_r = torch.nn.Parameter(torch.zeros((1, self.dim_hidden)))
+        self.h_lstm = torch.nn.Parameter(torch.zeros((1, self.dim_hidden)))
+        self.c_lstm = torch.nn.Parameter(torch.zeros((1, self.dim_hidden)))
         
     def repeat_v_h_c(self, batch_size):
-            
-            self.v_r = torch.zeros((batch_size, self.dim_hidden)).float()
-            self.h_lstm = torch.zeros((batch_size, self.dim_hidden)).float()
-            self.c_lstm = torch.zeros((batch_size, self.dim_hidden)).float()
-            
-            '''
-            if self.v_r.shape[0] != batch_size:
-                self.v_r = self.v_r.repeat(batch_size,1)
-                self.h_lstm = self.h_lstm.repeat(batch_size,1)
-                self.c_lstm = self.c_lstm.repeat(batch_size,1)
-            '''
+
+            v_r = self.v_r.repeat(batch_size,1)
+            h_lstm = self.h_lstm.repeat(batch_size,1)
+            c_lstm = self.c_lstm.repeat(batch_size,1)
             
             if next(self.parameters()).is_cuda:
                 self.v_r = self.v_r.cuda()
                 self.h_lstm = self.h_lstm.cuda()
                 self.c_lstm = self.c_lstm.cuda()
+                                         
+            return v_r, h_lstm, c_lstm
             
-    def forward(self, x):
-        """ the input must have shape (batch_size, emb_dim) because it will be 
+    def forward(self, context_vector):
+        
+        """ the input context_vector must have shape (batch_size, emb_dim) because it will be 
         concatenated with self.v_r of the same shape """
 
-        self.repeat_v_h_c(x.shape[0])
+        v_r, h_lstm, c_lstm = self.repeat_v_h_c(context_vector.shape[0])
         
-        x = x.squeeze(1)
+        context_vector = context_vector.squeeze(1) # (batch_size, 1, emb_dim) -> (batch_size, 1, emb_dim)
         
-        self.h_lstm, self.c_lstm = self.control(torch.cat([x, self.v_r], dim=1), 
-                                                (self.h_lstm, self.c_lstm))
+        # combine the current state x with the previous memory v_r, hidden and cell states
+        h_lstm, c_lstm = self.control(torch.cat([context_vector, v_r], dim=1), (h_lstm, c_lstm))
         
-        int_vecs = torch.tanh(self.interaction(self.h_lstm))
+        int_vecs = torch.tanh(self.interaction(h_lstm))
+        
         beta_, n_k_v = torch.split(int_vecs, 
-                                   [self.dim_hidden, 
-                                   self.dim_hidden*self.n_heads*3],
+                                   [self.dim_hidden,self.dim_hidden*self.n_heads*3],
                                    dim=1)  
         
-        beta = torch.sigmoid(self.kv_rate(beta_)) #(batch_size,1)
+        beta = torch.sigmoid(self.kv_rate(beta_)) #beta shape (batch_size,1)
+        
         n_k_v = n_k_v.view(n_k_v.shape[0], self.n_heads, -1).contiguous()
+        
+        # Separate out our 3 interaction terms 
         k_w, v_w, k_r = torch.chunk(n_k_v, 3, dim=2)
-        reconst_loss, reconst_loss_init = self.memfunc.update(k_w, v_w, 
-                                                                beta_rate=beta)
-        self.v_r = self.memfunc.read(k_r)
-        h_lstm = self.read_out(torch.cat([self.h_lstm, self.v_r], dim=1))
+        
+        # use the first 2 terms to bind the write keya nd write value
+        reconst_loss, reconst_loss_init = self.memfunc.update(k_w, v_w, beta_rate=beta)
+        
+        # use the last term to retreive memory 
+        v_r = self.memfunc.read(k_r)
+        
+        # combine the retreived memory with the hidden state into the context vector
+        context_vector = self.read_out(torch.cat([h_lstm, v_r], dim=1))
 
-        return h_lstm.unsqueeze(1), reconst_loss, reconst_loss_init  
+        return context_vector.unsqueeze(1), reconst_loss, reconst_loss_init
 
 class FFMemoryLearned(nn.Module):
     
