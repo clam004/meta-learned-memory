@@ -267,6 +267,3 @@ class Transformer(nn.Module):
 # https://github.com/clam004/chat-transformer/blob/main/scripts/Transformer.py
 # Where we have left out the embedding step so that
 # embedding word vectors can be handled by the Elastic Vocabulary Module 
-    
-    
-    
