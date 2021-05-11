@@ -1,3 +1,15 @@
+#1. Slang for bathroom or toilet around 1932
+#2. Oscar ______ Weiner
+#3. The outer bounds of an extreme operating parameter (the first word)
+#4. Game __ Thrones
+#5.  Str1 = Country code for germany  Str2 = Abbreviation for regular expression in Python  Str3 = Metric system
+#Arr = []
+#Arr.append(Str1)
+#Arr.append(Str3)
+#Arr.append(Str2)
+#print(''.join(Arr))
+
+
 # Environments
 .env
 .venv
