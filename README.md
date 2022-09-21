@@ -17,7 +17,7 @@ There are 3 major improvements described here:
 
 This repository builds on the [chat-transformer](https://github.com/clam004/chat-transformer) chatbot
 by adding a memory mechinism to the transformer sequence2sequence chatbot based on this [paper by Tsendsuren Munkhdalai et al](https://arxiv.org/pdf/1907.09720.pdf) called 
-[Metalearned Neural Memory: Teaching neural networks how to remember](https://www.microsoft.com/en-us/research/blog/metalearned-neural-memory-teaching-neural-networks-how-to-remember/)
+[Metalearned Neural Memory: Teaching neural networks how to remember](https://www.microsoft.com/en-us/research/blog/metalearned-neural-memory-teaching-neural-networks-how-to-remember/),here are some [Google Slides from an MLCOllective Research Jam](https://docs.google.com/presentation/d/15sFdEClWRMEQA1bFJGOWdA0urTaKpgwz8BHESmE3lwI/edit#slide=id.gca1eae21b6_0_44)
 
 <img src = 'https://www.microsoft.com/en-us/research/uploads/prod/2019/12/MSR_NeuralMemory_V5_1400x788.gif' height=500 width=1000>
 
