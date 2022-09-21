@@ -1,4 +1,4 @@
-# melissa-memory
+# meta-learned-memory
 documentation and tutorial on adding three capabilities to the neural chatbot agent (NCA) previously described here  [chat-transformer](https://github.com/clam004/chat-transformer) 
 
 There are 3 major improvements described here:
